@@ -37,7 +37,6 @@ function TIC:PLAYER_ENTERING_WORLD()
         ["class"] = select(2, UnitClass("player")),
         ["bags"] = {},
         ["bank"] = {},
-        ["equipped"] = {},
     } end
 end
 
@@ -59,53 +58,39 @@ end
 
 -- prepare tooltip text on each character
 local function CountOnCharacter(name, id)
-    local equipped, bags, bank = 0, 0, 0
+    local bags, bank = 0, 0, 0
     local result = {}
-
-    -- equipped
-    if TIC_DB[TIC.realm][name]["equipped"][id] then
-        equipped = TIC_DB[TIC.realm][name]["equipped"][id][1]
-        table.insert(result, L["Equipped"] .. ": " .. equipped)
-    end
+	
     -- bags
     if TIC_DB[TIC.realm][name]["bags"][id] then
         bags = TIC_DB[TIC.realm][name]["bags"][id][1]
-        table.insert(result, L["Bags"] .. ": " .. bags)
+        table.insert(result, "|cFFBBBBBB" .. L["Bags"] .. ":|cFFFFFFFF " .. bags)
     end
     -- bank
     if TIC_DB[TIC.realm][name]["bank"][id] then
         bank = TIC_DB[TIC.realm][name]["bank"][id][1]
-        table.insert(result, L["Bank"] .. ": " .. bank)
+        table.insert(result, "|cFFBBBBBB" .. L["Bank"] .. ":|cFFFFFFFF " .. bank)
     end
     
-    if equipped + bags + bank > 0 then
+    if bags + bank > 0 then
         local class = TIC_DB[TIC.realm][name]["class"]
         local cname = ColorByClass(class, name)
         if #result == 1 then
-            return cname, ColorByClass(class, result[1])
+            return cname, "|cFFFFFFFF" .. result[1]
         else
-            return cname, ColorByClass(class, equipped + bags + bank).." |cFFBBBBBB("..table.concat(result, ", ")..")"
+            return cname, "|cFFFFFFFF" .. bags + bank .. "|cFFBBBBBB (" .. table.concat(result, "|cFFFFFFFF, ") .. "|cFFBBBBBB)"
         end
     end
 end
 
 local function CountOnCurrentCharacter(id)
-    local equipped = 0, 0, 0
     local bags = GetItemCount(id)
     local bank = GetItemCount(id, true) - bags
     local result = {}
 
-    -- equipped
-    if TIC_DB[TIC.realm][TIC.name]["equipped"][id] then
-        equipped = TIC_DB[TIC.realm][TIC.name]["equipped"][id][1]
-        table.insert(result, L["Equipped"] .. ": " .. equipped)
-
-        bags = bags - equipped -- equipped
-    end
-
     --bags
     if bags > 0 then
-        table.insert(result, L["Bags"] .. ": " .. bags)
+        table.insert(result, "|cFFBBBBBB" .. L["Bags"] .. ":|cFFFFFFFF " .. bags)
     end
     -- update db bags -- FIXME: absolutely the same IN THEORY
     -- if TIC_DB[TIC.realm][TIC.name]["bags"][id] then
@@ -120,7 +105,7 @@ local function CountOnCurrentCharacter(id)
 
     -- banks
     if bank > 0 then
-        table.insert(result, L["Bank"] .. ": " .. bank)
+        table.insert(result, "|cFFBBBBBB" .. L["Bank"] .. ":|cFFFFFFFF " .. bank)
     end
     -- update db bank
     if TIC_DB[TIC.realm][TIC.name]["bank"][id] then
@@ -133,13 +118,13 @@ local function CountOnCurrentCharacter(id)
         end
     end
     
-    if equipped + bags + bank > 0 then
+    if bags + bank > 0 then
         local class = TIC_DB[TIC.realm][TIC.name]["class"]
         local cname = ColorByClass(class, TIC.name)
         if #result == 1 then
-            return cname, ColorByClass(class, result[1])
+            return cname, "|cFFFFFFFF" .. result[1]
         else
-            return cname, ColorByClass(class, equipped + bags + bank).." |cFFBBBBBB("..table.concat(result, ", ")..")"
+            return cname, "|cFFFFFFFF" .. bags + bank .. "|cFFBBBBBB (" .. table.concat(result, "|cFFFFFFFF, ") .. "|cFFBBBBBB)"
         end
     end
 end
