@@ -4,11 +4,10 @@ TIC:RegisterEvent("BANKFRAME_OPENED")
 TIC:RegisterEvent("BANKFRAME_CLOSED")
 TIC:RegisterEvent("PLAYERBANKBAGSLOTS_CHANGED")
 TIC:RegisterEvent("PLAYERBANKSLOTS_CHANGED")
-TIC:RegisterEvent("PLAYERREAGENTBANKSLOTS_CHANGED")
 -- TIC:RegisterEvent("PLAYER_LOGOUT")
 
 local temp = {}
-local function ScanBankBag(bag)
+local function ScanMail(bag)
     for slot = 1, GetContainerNumSlots(bag) do
         local icon, itemCount, locked, quality, readable, lootable, itemLink, isFiltered, noValue, itemID = GetContainerItemInfo(bag, slot)
         if itemID then
@@ -39,9 +38,6 @@ local function ScanBank()
 
         -- bank bag 0
         ScanBankBag(-1)
-
-        -- reagent bank
-        ScanBankBag(-3)
 
         TIC:Save(temp, "bank")
     else
