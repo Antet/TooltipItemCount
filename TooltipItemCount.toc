@@ -1,4 +1,4 @@
-## Interface: 80100
+## Interface: 11305
 ## Title: Tooltip Item Count
 ## Version: r5-release
 ## Author: fyhcslb/EnderNeko
@@ -10,5 +10,6 @@ Locales/zhCN.lua
 Core.lua
 Bags.lua
 Bank.lua
+Mail.lua
 Equipped.lua
 Tooltip.lua
