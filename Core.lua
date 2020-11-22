@@ -8,13 +8,9 @@ local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 
-function TIC:RegisterEvent(event)
-    frame:RegisterEvent(event)
-end
+function TIC:RegisterEvent(event) frame:RegisterEvent(event) end
 
-function TIC:UnregisterEvent(event)
-    frame:UnregisterEvent(event)
-end
+function TIC:UnregisterEvent(event) frame:UnregisterEvent(event) end
 
 -------------------------------------------
 -- events
@@ -32,25 +28,24 @@ function TIC:PLAYER_ENTERING_WORLD()
 
     -- init
     if type(TIC_DB[TIC.realm]) ~= "table" then TIC_DB[TIC.realm] = {} end
-    if type(TIC_DB[TIC.realm][TIC.name]) ~= "table" then TIC_DB[TIC.realm][TIC.name] = {
-        ["faction"] = TIC.faction,
-        ["class"] = select(2, UnitClass("player")),
-        ["bags"] = {},
-        ["bank"] = {},
-    } end
+    if type(TIC_DB[TIC.realm][TIC.name]) ~= "table" then
+        TIC_DB[TIC.realm][TIC.name] = {
+            ["faction"] = TIC.faction,
+            ["class"] = select(2, UnitClass("player")),
+            ["bags"] = {},
+            ["bank"] = {},
+            ["mail"] = {}
+        }
+    end
 end
 
-frame:SetScript("OnEvent", function(self, event, ...)
-    TIC[event](TIC, ...)
-end)
+frame:SetScript("OnEvent", function(self, event, ...) TIC[event](TIC, ...) end)
 
 -------------------------------------------
 -- functions
 -------------------------------------------
 -- save to SavedVariables
-function TIC:Save(temp, category)
-    TIC_DB[TIC.realm][TIC.name][category] = temp
-end
+function TIC:Save(temp, category) TIC_DB[TIC.realm][TIC.name][category] = temp end
 
 local function ColorByClass(class, str)
     return "|c" .. RAID_CLASS_COLORS[class].colorStr .. str .. "|r"
@@ -58,9 +53,9 @@ end
 
 -- prepare tooltip text on each character
 local function CountOnCharacter(name, id)
-    local bags, bank = 0, 0, 0
+    local bags, bank, mail = 0, 0, 0
     local result = {}
-	
+
     -- bags
     if TIC_DB[TIC.realm][name]["bags"][id] then
         bags = TIC_DB[TIC.realm][name]["bags"][id][1]
@@ -71,14 +66,21 @@ local function CountOnCharacter(name, id)
         bank = TIC_DB[TIC.realm][name]["bank"][id][1]
         table.insert(result, "|cFFBBBBBB" .. L["Bank"] .. ":|cFFFFFFFF " .. bank)
     end
-    
-    if bags + bank > 0 then
+    -- mail
+    if TIC_DB[TIC.realm][name]["mail"][id] then
+        mail = TIC_DB[TIC.realm][name]["mail"][id][1]
+        table.insert(result, "|cFFBBBBBB" .. L["Mail"] .. ":|cFFFFFFFF " .. mail)
+    end
+
+    if bags + bank + mail > 0 then
         local class = TIC_DB[TIC.realm][name]["class"]
         local cname = ColorByClass(class, name)
         if #result == 1 then
             return cname, "|cFFFFFFFF" .. result[1]
         else
-            return cname, "|cFFFFFFFF" .. bags + bank .. "|cFFBBBBBB (" .. table.concat(result, "|cFFFFFFFF, ") .. "|cFFBBBBBB)"
+            return cname,
+                   "|cFFFFFFFF" .. bags + bank + mail .. "|cFFBBBBBB (" ..
+                       table.concat(result, "|cFFFFFFFF, ") .. "|cFFBBBBBB)"
         end
     end
 end
@@ -86,9 +88,10 @@ end
 local function CountOnCurrentCharacter(id)
     local bags = GetItemCount(id)
     local bank = GetItemCount(id, true) - bags
+    local mail = TIC:GetMailItemCount(id)
     local result = {}
 
-    --bags
+    -- bags
     if bags > 0 then
         table.insert(result, "|cFFBBBBBB" .. L["Bags"] .. ":|cFFFFFFFF " .. bags)
     end
@@ -107,6 +110,12 @@ local function CountOnCurrentCharacter(id)
     if bank > 0 then
         table.insert(result, "|cFFBBBBBB" .. L["Bank"] .. ":|cFFFFFFFF " .. bank)
     end
+
+    -- mails
+    if mail > 0 then
+        table.insert(result, "|cFFBBBBBB" .. L["Mail"] .. ":|cFFFFFFFF " .. mail)
+    end
+
     -- update db bank
     if TIC_DB[TIC.realm][TIC.name]["bank"][id] then
         if bank ~= TIC_DB[TIC.realm][TIC.name]["bank"][id][1] then
@@ -117,14 +126,16 @@ local function CountOnCurrentCharacter(id)
             end
         end
     end
-    
-    if bags + bank > 0 then
+
+    if bags + bank + mail > 0 then
         local class = TIC_DB[TIC.realm][TIC.name]["class"]
         local cname = ColorByClass(class, TIC.name)
         if #result == 1 then
             return cname, "|cFFFFFFFF" .. result[1]
         else
-            return cname, "|cFFFFFFFF" .. bags + bank .. "|cFFBBBBBB (" .. table.concat(result, "|cFFFFFFFF, ") .. "|cFFBBBBBB)"
+            return cname,
+                   "|cFFFFFFFF" .. bags + bank + mail .. "|cFFBBBBBB (" ..
+                       table.concat(result, "|cFFFFFFFF, ") .. "|cFFBBBBBB)"
         end
     end
 end
@@ -144,10 +155,15 @@ function TIC:Count(id)
     end
     -- add current character
     local text1, text2 = CountOnCurrentCharacter(id)
-    if text1 and text2 then
-        table.insert(result, {text1, text2})
-    end
+    if text1 and text2 then table.insert(result, {text1, text2}) end
     return result
+end
+
+-- count items in mail by id
+function TIC:GetMailItemCount(id)
+    local item = TIC_DB[TIC.realm][TIC.name]["mail"][id];
+
+    return item and item[1] or 0
 end
 
 -------------------------------------------
